@@ -23,6 +23,7 @@ string baseof(string & x) {
 
 // Get the extension of a file name
 string extof(string & x) {
+	//cout << x.substr(x.find_last_of('.') + 1,x.size()-x.find_last_of('.') - 1) << "\\";
 	return x.substr(x.find_last_of('.') + 1,x.size()-x.find_last_of('.'));
 }
 
@@ -39,8 +40,10 @@ int find(vector<string> & v, string  x) {
 
 // String trailing spaces on the right end
 string strip(string & x) {
-	if (x[x.size() - 1] == ' ')
-		return x.substr(0,x.size() - 1);
+	if (x[x.size() - 1] == ' ') {
+		string y = x.substr(0,x.size() - 1);
+		return strip(y);
+	}
 	else return x;
 }
 
@@ -55,6 +58,7 @@ vector<string> split(string x, char c) {
 			ret.push_back(buf);
 			buf = "";
 		}
+	ret.push_back(buf);
 	return ret;
 }
 
@@ -80,8 +84,8 @@ string dependencies(string & cpp, vector<string> & files, vector<string> & defin
 		}
 		if (line.substr(0,10) == "#include \"") { //if a custom file is included
 			string header = line.substr(10,line.find_last_of('"')-10); //get the file name
-			//if (ret.find(line.substr(10,line.find_last_of('"')-12) + ".cpp ") == -1) //debug
-			//	ret += line.substr(10,line.find_last_of('"')-12) + ".cpp ";
+//			if (ret.find(line.substr(10,line.find_last_of('"')-12) + ".cpp ") == -1) //debug
+//				ret += line.substr(10,line.find_last_of('"')-12) + ".cpp ";
 			if (find(files,header) != -1) {
 				string dep = dependencies(header, files, defines); //get the dependencies of the specified header
 //				cout << "{" + dep + "}" << endl; //debug
@@ -104,7 +108,7 @@ string dependencies(string & cpp, vector<string> & files) {
 	vector<string> defines = vector<string>();
 	string ret = dependencies(cpp, files, defines);
 	if (ret.find(cpp) == -1)
-		ret = cpp + " " + ret;
+		ret = strip(cpp) + " " + ret;
 /*	cout << "{";
 	for (int i = 0; i < defines.size(); i++) 
 		cout << defines[i] + ",";
@@ -124,21 +128,27 @@ int main(int argc, char *argv[]) {
 	vector<string> languages = vector<string>();
 	vector<string> extensions = vector<string>();
 	vector<string> comMacros = vector<string>();
+	vector<string> defComps = vector<string>();
 	languages.push_back("c++");
 	extensions.push_back("cpp");
 	comMacros.push_back("CXX");
+	defComps.push_back("g++");
 	languages.push_back("c");
 	extensions.push_back("c");
-	comMacros.push_back("CXX");
+	comMacros.push_back("CC");
+	defComps.push_back("gcc");
 	int ei = 0; //c++
 	for (int i = 1; i < argc; i++) { //iterate through parameters
 		if (argv[i][0] == '-') {
 			string conv;
+			bool compilerSpecified = false;
 			switch (argv[i][1]) {
 			case 'c': //compiler
 				conv = ((string)argv[i]); 
-				if (conv.size() > 2) //if a compiler was given
+				if (conv.size() > 2) {//if a compiler was given
 					compiler = conv.substr(3,conv.size()-3); //set compiler to text
+					compilerSpecified = true;
+				}
 				else {
 					cout << "usage: " << argv[0] << " (-c=[compiler]) files" << endl; //give usage hints
 					cout << "error: 'c' specified without a parameter" << endl;
@@ -180,13 +190,15 @@ int main(int argc, char *argv[]) {
 			case 'l':
 				  conv = ((string)argv[i]);
 				  if (conv.size() > 2) {
-					  int ind = find(languages, conv.substr(2,conv.size()-2));
-					  if (ind != 1) {
+					  int ind = find(languages, conv.substr(3,conv.size()-3));
+					  if (ind != -1) {
 						  language = languages[ind];
 						  ei = ind;
+						  if (!compilerSpecified)
+							  compiler = defComps[ei];
 					  }
 					  else {
-						  cout << "error: unknown language " + conc.substr(2,conv.size()-2) << endl;
+						  cout << "error: unknown language " + conv.substr(3,conv.size()-3) << endl;
 						  return 0;
 					  }
 				  }	  
@@ -221,9 +233,9 @@ int main(int argc, char *argv[]) {
 		if (drn->d_name[0] != '.') 
 			files.push_back(drn->d_name);
 	closedir(dir);*/
-	//TODO
-	cout << ((flags != "") ? ("FLAGS=" + flags + "\n") : "");
-	cout << "CXX=" << compiler << " $(CXXFLAGS)" << endl;
+
+	cout << ((flags != "") ? (comMacros[ei] + "FLAGS=" + flags + "\n") : "");
+	cout << comMacros[ei] + "=" << compiler << " $(" + comMacros[ei] + "FLAGS)" << endl;
 	cout << "DEBUG=" << ((debug)? "-g" : "") << endl;
 	cout << endl;
 	
@@ -233,21 +245,22 @@ int main(int argc, char *argv[]) {
 //	extens.push_back("NULL");
 	for (unsigned i = 0; i < files.size(); i++) { //get the names and extensions of the files
 		names.push_back(baseof(files[i]));
-		extens.push_back(extof(files[i]));
+		string e = extof(files[i]);
+		extens.push_back(strip(e));
 //		cout << names[i] << ":" <<  files[i] << ":" << extens[i] << "  ";
 	}
 
-	cout << ".SUFFIXES: .cpp .o"  << endl << endl; //I assume you know a thing or two about make files
+	cout << ".SUFFIXES: ." + extensions[ei] + " .o"  << endl << endl; //I assume you know a thing or two about make files
 
 	string os = ""; //as in "o's"
 	for (unsigned i = 0; i < names.size(); i++) { //list the o files into a macro
-		if (extens[i] == "cpp")
+		if (extens[i] == extensions[ei])
 			os += names[i] + ".o" + ((i + 1 < names.size()) ? " " : "");
 	}
 	os = strip(os);
 	cout << "OFILES= " + os << endl;
 	cout << out + ": $(OFILES)" << endl;
-	cout << "\t$(CXX) $(DEBUG) $(OFILES) -o " + out << endl;
+	cout << "\t$(" + comMacros[ei] + ") $(DEBUG) $(OFILES) -o " + out << endl;
 //	cout << endl;
 
 	/*for (unsigned i = 0; i < names.size(); i++) {
@@ -272,8 +285,10 @@ int main(int argc, char *argv[]) {
 	cout << "\trm $(prefix)/bin/" + out << endl << endl;
 
 	for (unsigned i = 0; i < names.size(); i++) { //list the files and dependencies
-		if (extens[i] == "cpp") {
+//		cout << extens[i] + " == " + extensions[ei] + " " + ((extens[i] == extensions[ei]) ? "true" : "false") << endl;
+		if (extens[i] == extensions[ei]) {
 			string dep = files[i];
+//			cout << files[i];
 			cout << names[i] + ".o: " + dependencies(dep,files) << endl; //dependency(): just 30 easy steps!
 		}
 	}
