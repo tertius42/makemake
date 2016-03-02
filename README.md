@@ -1,0 +1,2 @@
+# makemake
+Create Makefiles
