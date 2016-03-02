@@ -119,7 +119,18 @@ int main(int argc, char *argv[]) {
 	string out = "a.out";
 	string prefix = "/usr";
 	string flags = "";
+	string language = "c++";
 	bool debug = false;
+	vector<string> languages = vector<string>();
+	vector<string> extensions = vector<string>();
+	vector<string> comMacros = vector<string>();
+	languages.push_back("c++");
+	extensions.push_back("cpp");
+	comMacros.push_back("CXX");
+	languages.push_back("c");
+	extensions.push_back("c");
+	comMacros.push_back("CXX");
+	int ei = 0; //c++
 	for (int i = 1; i < argc; i++) { //iterate through parameters
 		if (argv[i][0] == '-') {
 			string conv;
@@ -130,7 +141,7 @@ int main(int argc, char *argv[]) {
 					compiler = conv.substr(3,conv.size()-3); //set compiler to text
 				else {
 					cout << "usage: " << argv[0] << " (-c=[compiler]) files" << endl; //give usage hints
-					cout << "error: 'c' specified with no compiler" << endl;
+					cout << "error: 'c' specified without a parameter" << endl;
 					return 0; //cut execution
 				}
 			break;
@@ -140,7 +151,7 @@ int main(int argc, char *argv[]) {
                                         out = conv.substr(3,conv.size()-3);
                                 else {
                                         cout << "usage: " << argv[0] << " (-o=[executable]) files" << endl;
-                                        cout << "error: 'o' specified with no exectuable name" << endl;
+                                        cout << "error: 'o' specified without a parameter" << endl;
                                         return 0;
                                 }
 			break;
@@ -150,7 +161,7 @@ int main(int argc, char *argv[]) {
                                         prefix = conv.substr(3,conv.size()-3);
                                 else {
                                         cout << "usage: " << argv[0] << " (-p=[bin prefix]) files" << endl;
-                                        cout << "error: 'p' specified without a prefix" << endl;
+                                        cout << "error: 'p' specified without a parameter" << endl;
                                         return 0;
                                 }
 			break;
@@ -160,13 +171,35 @@ int main(int argc, char *argv[]) {
                                         flags = conv.substr(3,conv.size()-3);
                                 else {
                                         cout << "usage: " << argv[0] << " (-f=[flags]) files" << endl;
-                                        cout << "error: 'f' specified without any flags" << endl;
+                                        cout << "error: 'f' specified without a paramter" << endl;
                                         return 0;
                                 }
 			break;
 			case 'g': debug = true; //debug flags
 			break;
-			
+			case 'l':
+				  conv = ((string)argv[i]);
+				  if (conv.size() > 2) {
+					  int ind = find(languages, conv.substr(2,conv.size()-2));
+					  if (ind != 1) {
+						  language = languages[ind];
+						  ei = ind;
+					  }
+					  else {
+						  cout << "error: unknown language " + conc.substr(2,conv.size()-2) << endl;
+						  return 0;
+					  }
+				  }	  
+				  else {
+					  cout << "usage: " << argv[0] << " (-l=[language]) files" << endl;
+					  cout << "error: 'l' specified without a parameter" << endl;
+					  return 0;
+				  }
+			break;
+			default:
+				cout << "error: unkown switch " + argv[i][0] << endl;
+				return 0;
+			break;
 			}
 		}
 		else //if anything else, assume its a file and push it to the list
@@ -188,8 +221,8 @@ int main(int argc, char *argv[]) {
 		if (drn->d_name[0] != '.') 
 			files.push_back(drn->d_name);
 	closedir(dir);*/
-
-	cout << ((flags != "") ? ("CXXFLAGS=" + flags + "\n") : "");
+	//TODO
+	cout << ((flags != "") ? ("FLAGS=" + flags + "\n") : "");
 	cout << "CXX=" << compiler << " $(CXXFLAGS)" << endl;
 	cout << "DEBUG=" << ((debug)? "-g" : "") << endl;
 	cout << endl;
