@@ -13,6 +13,7 @@ makemake [parameters] *.* > Makefile
 - -g			Adds the debug compiler flag
 - -o=[executable]	Add an executable 
 - -l=[language]		Change language - default C++
+
 It is necessary to to have the equals sign before the sub-parameter. Else, the program will see it as a file name, then throw an error. If you need to use spaces in your parameter, use quotes.
 
 Changelog:
