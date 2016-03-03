@@ -109,7 +109,7 @@ string dependencies(string & cpp, vector<string> & files) {
 	string ret = dependencies(cpp, files, defines);
 	if (ret.find(cpp) == -1)
 		ret = strip(cpp) + " " + ret;
-/*	cout << "{";
+/*	cout << "{"; //debug
 	for (int i = 0; i < defines.size(); i++) 
 		cout << defines[i] + ",";
 	cout << "}";//*/
@@ -118,26 +118,30 @@ string dependencies(string & cpp, vector<string> & files) {
 
 //Runs the program
 int main(int argc, char *argv[]) {
-	string compiler = "g++"; //default program switches
+	string compiler = "g++"; //default program switches -- compiler
 	vector<string> files = vector<string>();
-	string out = "a.out";
-	string prefix = "/usr";
-	string flags = "";
-	string language = "c++";
-	bool debug = false;
-	vector<string> languages = vector<string>();
-	vector<string> extensions = vector<string>();
+	string out = "a.out"; //executable name
+	string prefix = "/usr"; //installation prefix
+	string flags = ""; //compiler flags
+	string language = "c++"; //default language
+	bool debug = false; //use debugging flag
+
+	vector<string> languages = vector<string>(); //each vector contains a specification for a language
+	vector<string> extensions = vector<string>(); //the index holds between each vector
 	vector<string> comMacros = vector<string>();
 	vector<string> defComps = vector<string>();
-	languages.push_back("c++");
+
+	languages.push_back("c++"); //c++
 	extensions.push_back("cpp");
 	comMacros.push_back("CXX");
 	defComps.push_back("g++");
-	languages.push_back("c");
+
+	languages.push_back("c"); //c
 	extensions.push_back("c");
 	comMacros.push_back("CC");
 	defComps.push_back("gcc");
-	int ei = 0; //c++
+	int ei = 0; //default is c++
+	
 	for (int i = 1; i < argc; i++) { //iterate through parameters
 		if (argv[i][0] == '-') {
 			string conv;
@@ -145,7 +149,7 @@ int main(int argc, char *argv[]) {
 			switch (argv[i][1]) {
 			case 'c': //compiler
 				conv = ((string)argv[i]); 
-				if (conv.size() > 2) {//if a compiler was given
+				if (conv.size() > 3) {//if a compiler was given
 					compiler = conv.substr(3,conv.size()-3); //set compiler to text
 					compilerSpecified = true;
 				}
@@ -157,7 +161,7 @@ int main(int argc, char *argv[]) {
 			break;
 			case 'o': //renamed executable
 				conv = ((string)argv[i]);
-                                if (conv.size() > 2)
+                                if (conv.size() > 3)
                                         out = conv.substr(3,conv.size()-3);
                                 else {
                                         cout << "usage: " << argv[0] << " (-o=[executable]) files" << endl;
@@ -167,7 +171,7 @@ int main(int argc, char *argv[]) {
 			break;
 			case 'p': //installation prefix
 				conv = ((string)argv[i]);
-                                if (conv.size() > 2)
+                                if (conv.size() > 3)
                                         prefix = conv.substr(3,conv.size()-3);
                                 else {
                                         cout << "usage: " << argv[0] << " (-p=[bin prefix]) files" << endl;
@@ -177,7 +181,7 @@ int main(int argc, char *argv[]) {
 			break;
 			case 'f': //compiler flags (not used)
 				conv = ((string)argv[i]);
-                                if (conv.size() > 2)
+                                if (conv.size() > 3)
                                         flags = conv.substr(3,conv.size()-3);
                                 else {
                                         cout << "usage: " << argv[0] << " (-f=[flags]) files" << endl;
@@ -187,29 +191,29 @@ int main(int argc, char *argv[]) {
 			break;
 			case 'g': debug = true; //debug flags
 			break;
-			case 'l':
+			case 'l': //change language
 				  conv = ((string)argv[i]);
-				  if (conv.size() > 2) {
-					  int ind = find(languages, conv.substr(3,conv.size()-3));
-					  if (ind != -1) {
-						  language = languages[ind];
-						  ei = ind;
-						  if (!compilerSpecified)
-							  compiler = defComps[ei];
+				  if (conv.size() > 3) {
+					  int ind = find(languages, conv.substr(3,conv.size()-3)); //find language if specified
+					  if (ind != -1) { //if specified
+						  language = languages[ind]; //set language to specification
+						  ei = ind; //set extension index to specification
+						  if (!compilerSpecified) //if a compiler hasn't already been specified
+							  compiler = defComps[ei]; //set compiler to makemake's default
 					  }
-					  else {
+					  else { //show error, language, and quit if unknown
 						  cout << "error: unknown language " + conv.substr(3,conv.size()-3) << endl;
 						  return 0;
 					  }
 				  }	  
-				  else {
+				  else { //if nothing was specified afterwards
 					  cout << "usage: " << argv[0] << " (-l=[language]) files" << endl;
 					  cout << "error: 'l' specified without a parameter" << endl;
 					  return 0;
 				  }
 			break;
-			default:
-				cout << "error: unkown switch " + argv[i][0] << endl;
+			default: //if the switch is unknown
+				cout << "error: unkown switch " + argv[i] << endl;
 				return 0;
 			break;
 			}
@@ -217,25 +221,17 @@ int main(int argc, char *argv[]) {
 		else //if anything else, assume its a file and push it to the list
 			files.push_back((string)argv[i]);
 	}
-	if (files.size() == 0) {
+	if (files.size() == 0) { //terminate if there are no files given
 		cout << "usage: " << argv[0] << " files" << endl;
 		cout << "error: nothing to do" << endl;
 		return 0;
 	}
 
-	//cout << compiler << endl;
-
-	/*R *dir;
-	dir = opendir("./");
-	dirent * drn;
-	vector<string> files = vector<string>();
-	while ((drn = readdir(dir)) != NULL)
-		if (drn->d_name[0] != '.') 
-			files.push_back(drn->d_name);
-	closedir(dir);*/
-
+	//start by specifying compiler flags if any
 	cout << ((flags != "") ? (comMacros[ei] + "FLAGS=" + flags + "\n") : "");
+	//specify compiler and language macros
 	cout << comMacros[ei] + "=" << compiler << " $(" + comMacros[ei] + "FLAGS)" << endl;
+	//define the debug macro, but not necessarily give it a parameter
 	cout << "DEBUG=" << ((debug)? "-g" : "") << endl;
 	cout << endl;
 	
@@ -246,11 +242,12 @@ int main(int argc, char *argv[]) {
 	for (unsigned i = 0; i < files.size(); i++) { //get the names and extensions of the files
 		names.push_back(baseof(files[i]));
 		string e = extof(files[i]);
-		extens.push_back(strip(e));
+		extens.push_back(strip(e)); //strip -- bug on my part for editing file names wrong -- it doesn't hurt
 //		cout << names[i] << ":" <<  files[i] << ":" << extens[i] << "  ";
 	}
 
-	cout << ".SUFFIXES: ." + extensions[ei] + " .o"  << endl << endl; //I assume you know a thing or two about make files
+	//uses suffix rules
+	cout << ".SUFFIXES: ." + extensions[ei] + " .o"  << endl << endl;
 
 	string os = ""; //as in "o's"
 	for (unsigned i = 0; i < names.size(); i++) { //list the o files into a macro
@@ -258,6 +255,7 @@ int main(int argc, char *argv[]) {
 			os += names[i] + ".o" + ((i + 1 < names.size()) ? " " : "");
 	}
 	os = strip(os);
+	//we use the $(OFILES) to save some file space
 	cout << "OFILES= " + os << endl;
 	cout << out + ": $(OFILES)" << endl;
 	cout << "\t$(" + comMacros[ei] + ") $(DEBUG) $(OFILES) -o " + out << endl;
@@ -274,19 +272,20 @@ int main(int argc, char *argv[]) {
 	}*/
 	
 	cout << endl;
-	cout << "clean:" << endl;
+	cout << "clean:" << endl; //specify a default clean rule
 	cout << "\t-rm *.o " + out << endl;
 	cout << endl;
+	//installation prefix
 	cout << "prefix=" << ((prefix[prefix.size()-1] == '/') ? prefix.substr(0,prefix.size()-1) : prefix) << endl << endl;
-	cout << "install: " + out << endl;
+	cout << "install: " + out << endl; //install rule
 	cout << "\tinstall -m 0755 " + out + " $(prefix)/bin" << endl;
 	cout << endl;
-	cout << "uninstall: " + out << endl;
+	cout << "uninstall: " + out << endl; //uninstall rule
 	cout << "\trm $(prefix)/bin/" + out << endl << endl;
 
 	for (unsigned i = 0; i < names.size(); i++) { //list the files and dependencies
 //		cout << extens[i] + " == " + extensions[ei] + " " + ((extens[i] == extensions[ei]) ? "true" : "false") << endl;
-		if (extens[i] == extensions[ei]) {
+		if (extens[i] == extensions[ei]) { //if the file suffix is eq to the specified suffix
 			string dep = files[i];
 //			cout << files[i];
 			cout << names[i] + ".o: " + dependencies(dep,files) << endl; //dependency(): just 30 easy steps!

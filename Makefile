@@ -1,5 +1,5 @@
-CXXFLAGS=-Wall -O3 -Ofast -std=c++98
-CXX=g++
+CXXFLAGS=-O3 -Ofast
+CXX=g++ $(CXXFLAGS)
 DEBUG=
 
 .SUFFIXES: .cpp .o
