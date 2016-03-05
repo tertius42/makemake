@@ -213,7 +213,7 @@ int main(int argc, char *argv[]) {
 				  }
 			break;
 			default: //if the switch is unknown
-				cout << "error: unkown switch " + argv[i] << endl;
+				cout << "error: unkown switch " + argv[i][0] << endl;
 				return 0;
 			break;
 			}
@@ -230,7 +230,7 @@ int main(int argc, char *argv[]) {
 	//start by specifying compiler flags if any
 	cout << ((flags != "") ? (comMacros[ei] + "FLAGS=" + flags + "\n") : "");
 	//specify compiler and language macros
-	cout << comMacros[ei] + "=" << compiler << " $(" + comMacros[ei] + "FLAGS)" << endl;
+	cout << comMacros[ei] + "=" << compiler /*<< " $(" + comMacros[ei] + "FLAGS)"*/ << endl;
 	//define the debug macro, but not necessarily give it a parameter
 	cout << "DEBUG=" << ((debug)? "-g" : "") << endl;
 	cout << endl;
@@ -258,7 +258,7 @@ int main(int argc, char *argv[]) {
 	//we use the $(OFILES) to save some file space
 	cout << "OFILES= " + os << endl;
 	cout << out + ": $(OFILES)" << endl;
-	cout << "\t$(" + comMacros[ei] + ") $(DEBUG) $(OFILES) -o " + out << endl;
+	cout << "\t$(" + comMacros[ei] + ") $(CXXFLAGS) $(DEBUG) $(OFILES) -o " + out << endl;
 //	cout << endl;
 
 	/*for (unsigned i = 0; i < names.size(); i++) {
