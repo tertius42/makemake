@@ -140,6 +140,11 @@ int main(int argc, char *argv[]) {
 	extensions.push_back("c");
 	comMacros.push_back("CC");
 	defComps.push_back("gcc");
+
+	languages.push_back("nasm");
+	extensions.push_back("s");
+	comMacros.push_back("AS");
+	defComps.push_back("nasm -f elf32");
 	int ei = 0; //default is c++
 	
 	for (int i = 1; i < argc; i++) { //iterate through parameters
